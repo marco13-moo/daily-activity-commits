@@ -1,0 +1,37 @@
+name: Daily Random Commits
+
+on:
+  schedule:
+    - cron: "15 6 * * *" # once daily (UTC)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  auto-commit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure git (bot identity)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Generate random daily activity
+        run: |
+          COMMITS=$((RANDOM % 6))  # 0–5 commits
+          echo "Today: $COMMITS commits"
+
+          for i in $(seq 1 $COMMITS); do
+            echo "$(date -u) | activity $RANDOM" >> activity.log
+            git add activity.log
+            git commit -m "chore: automated daily activity"
+            sleep $((RANDOM % 20))
+          done
+
+      - name: Push changes
+        run: git push
